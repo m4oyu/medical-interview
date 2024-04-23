@@ -26,6 +26,7 @@ Example usage:
 
 # [START speech_transcribe_infinite_streaming]
 
+import os
 import queue
 import re
 import sys
@@ -302,6 +303,8 @@ def listen_print_loop(responses: object, stream: object, callback_interim: objec
 
 
 def main(callback_interim, callback_final) -> None:
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./.credentials/medical-interview-420407-ce680056c929.json"
+
     """start bidirectional streaming from microphone input to speech API"""
     client = speech.SpeechClient()
     config = speech.RecognitionConfig(

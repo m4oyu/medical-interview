@@ -1,5 +1,6 @@
 import pyaudio as pa
 import webrtcvad 
+import time
 
 # https://pypi.org/project/webrtcvad-wheels/
 # sample_rateは 8000, 16000, 32000 or 48000 Hzのいずれか
@@ -34,13 +35,35 @@ class GOOGLE_WEBRTC():
             ## ストリームからデータを取得
             audio_data = self.stream.read(BUFFER_SIZE, exception_on_overflow = False)
             vad_result = self.vad.is_speech(audio_data, RATE)
+            # print(vad_result)
             if vad_result != self.before_result:
                 if callback != None:
+                    # print("====================vad callback=========================")
                     callback(vad_result)
                 self.before_result = vad_result
+
+            time.sleep(0.1)
 
     def shutdown(self):
         self.thread_alive = False
         self.stream.stop_stream()
         self.stream.close()
         self.audio.terminate()
+
+def on_vad_changed(is_speech):
+    if is_speech:
+        print("Speech has started...")
+    else:
+        print("Speech has ended...")
+
+def main():
+    try:
+        vad_system = GOOGLE_WEBRTC()
+        vad_system.vad_loop(on_vad_changed)
+    except Exception as e:
+        print("An error occurred:", e)
+    finally:
+        vad_system.shutdown()
+
+if __name__ == "__main__":
+    main()

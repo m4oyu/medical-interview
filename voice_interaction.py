@@ -31,20 +31,28 @@ class Main():
             thread.join()
 
     def callback_interim(self, user_utterance):
+        print("callback_interim: " + user_utterance)
         self.latest_user_utterance = user_utterance
 
     def callback_final(self, user_utterance):
+        print("callback_final: " + user_utterance)
         self.latest_user_utterance = user_utterance
 
     def callback_vad(self, flag):
-        if flag == True:
-            self.latest_user_utterance = None
-        elif self.latest_user_utterance != None:
+        if flag == True: # 発話スタート
+            if self.latest_user_utterance != None:
+                print("callback_vad flag is true, latest_user_utterance=" + self.latest_user_utterance)
+            # self.latest_user_utterance = None
+        elif self.latest_user_utterance != None: # 発話官僚
+            if self.latest_user_utterance != None:
+                print("callback_vad flag is false, latest_user_utterance=" + self.latest_user_utterance)
             self.time_user_speeching_end = time.time()
             threading.Thread(target=self.main_process, args=(self.latest_user_utterance,)).start()
 
     def main_process(self, user_utterance):
         llm_result = self.llm.get(user_utterance)
+        # print("main_process: llm_result: " + llm_result.choices[0].message.content + ", valid_stream: " + self.valid_stream)
+
         if self.valid_stream == False:
             agent_utterance = llm_result.choices[0].message.content
             wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)

@@ -1,9 +1,13 @@
 from openai import OpenAI
+import os
 
 class ChatGPT():
 
     def __init__(self, valid_stream) -> None:
-        self.client = OpenAI()
+        self.client = OpenAI(
+            # This is the default and can be omitted
+            api_key=os.getenv('OPENAI_API_KEY'),
+        )
         self.dialogue_history = []
         self.valid_stream = valid_stream
 
@@ -14,6 +18,7 @@ class ChatGPT():
             messages=self.dialogue_history,
             stream = self.valid_stream
         )
+        print(completion.choices[0].message.content)
         return completion
 
     def set_agent_utterance(self, agent_utterance):
