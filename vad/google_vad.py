@@ -26,7 +26,7 @@ class GOOGLE_WEBRTC():
             raise EnvironmentError("audio streamが開けませんでした")
 
         # 無音区間検出
-        self.vad = webrtcvad.Vad()
+        self.vad = webrtcvad.Vad(3)
         self.thread_alive = True
 
     def vad_loop(self, callback):
