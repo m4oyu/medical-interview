@@ -9,7 +9,7 @@ class ChatGPT():
             api_key=os.getenv('OPENAI_API_KEY'),
         )
         self.dialogue_history = []
-        self.valid_stream = valid_stream
+        self.valid_stream = valid_stream # 漸次的に応答を返す機能を有効にするか
 
     def get(self, user_utterance):
         self.dialogue_history.append({"role": "user", "content": user_utterance})
