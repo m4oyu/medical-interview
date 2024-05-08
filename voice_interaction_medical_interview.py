@@ -1,6 +1,6 @@
 from stt import google_stt
 from vad import google_vad
-from llm import chatgpt
+from llm import chatgpt_assistants
 from tts import voicevox
 import threading
 from playsound import playsound
@@ -13,7 +13,7 @@ class Main():
         vad = google_vad.GOOGLE_WEBRTC()
         vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad, ))
         stt_thread = threading.Thread(target=google_stt.main, args=(self.callback_interim, self.callback_final,))
-        self.llm = chatgpt.ChatGPT(valid_stream=self.valid_stream)
+        self.llm = chatgpt_assistants.ChatGPT(valid_stream=self.valid_stream)
 
         self.latest_user_utterance = None
         self.finished_user_speeching = False
