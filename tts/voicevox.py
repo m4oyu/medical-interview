@@ -2,7 +2,7 @@ import requests
 import json
 import time
 
-def get_audio_query(text, speaker = 1):
+def get_audio_query(text, speaker = 41):
     query_payload = {"text": text, "speaker": speaker}
     while True:
         try:
@@ -16,7 +16,7 @@ def get_audio_query(text, speaker = 1):
             time.sleep(0.1)
 
 
-def run_synthesis(query_data, speaker = 1):
+def run_synthesis(query_data, speaker = 41):
     synth_payload = {"speaker": speaker}    
     while True:
         try:
