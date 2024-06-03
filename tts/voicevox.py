@@ -2,11 +2,14 @@ import requests
 import json
 import time
 
+asap = "http://192.168.1.161:50021"
+local = "http://localhost:50021"
+
 def get_audio_query(text, speaker = 41):
     query_payload = {"text": text, "speaker": speaker}
     while True:
         try:
-            url = "http://localhost:50021/audio_query"
+            url = asap + "/audio_query"
             r = requests.post(url, params=query_payload, timeout=(10.0, 300.0))
             if r.status_code == 200:
                 return r.json()
@@ -20,7 +23,7 @@ def run_synthesis(query_data, speaker = 41):
     synth_payload = {"speaker": speaker}    
     while True:
         try:
-            url = "http://localhost:50021/synthesis"
+            url = asap + "/synthesis"
             r = requests.post(url, params=synth_payload, data=json.dumps(query_data), timeout=(10.0, 300.0))
             if r.status_code == 200:
                 return r.content
