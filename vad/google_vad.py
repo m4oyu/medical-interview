@@ -42,7 +42,7 @@ class GOOGLE_WEBRTC():
                     callback(vad_result)
                 self.before_result = vad_result
 
-            time.sleep(0.1)
+            time.sleep(0.2)
 
     def shutdown(self):
         self.thread_alive = False

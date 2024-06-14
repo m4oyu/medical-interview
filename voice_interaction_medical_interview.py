@@ -16,10 +16,14 @@ class Main():
         self.llm = chatgpt_assistants.ChatGPT(valid_stream=self.valid_stream)
 
         self.latest_user_utterance = None
+        self.dialogue_history = ""
         self.finished_user_speeching = False
 
         # 計測用
         self.time_user_speeching_end = None
+
+        # 排他制御用のロック
+        self.lock = threading.Lock()
 
         stt_thread.start()
         vad_thread.start()
@@ -36,24 +40,32 @@ class Main():
 
     def callback_final(self, user_utterance):
         print("callback_final: " + user_utterance)
-        self.latest_user_utterance = user_utterance
+        self.dialogue_history = ""
 
     def callback_vad(self, flag):
         if flag == True: # 発話のはじめ
             if self.latest_user_utterance != None:
                 print("callback_vad flag is true, latest_user_utterance=" + self.latest_user_utterance)
-            
         elif self.latest_user_utterance != None: # 発話の終わり
             if self.latest_user_utterance != None:
                 print("callback_vad flag is false, latest_user_utterance=" + self.latest_user_utterance)
             self.time_user_speeching_end = time.time()
-            threading.Thread(target=self.main_process, args=(self.latest_user_utterance,)).start()
+            user_utt = self.latest_user_utterance[len(self.dialogue_history):]
+
+            print("user_utt: " + user_utt)
+            if len(user_utt) <= 0:
+                return
+            
+            threading.Thread(target=self.main_process, args=(user_utt,)).start()
+            self.dialogue_history = self.latest_user_utterance                                             
 
     def main_process(self, user_utterance):
-        agent_utterance = self.llm.get(user_utterance)
-        if self.valid_stream == False:
-            wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
-            self.audio_play(wav_data)
+        with self.lock:
+            self.latest_user_utterance_len = len(self.latest_user_utterance)
+            agent_utterance = self.llm.get(user_utterance)
+            if self.valid_stream == False:
+                wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
+                self.audio_play(wav_data)
 
     def audio_play(self, wav_data):
         start_time = time.time()
