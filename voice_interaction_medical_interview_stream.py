@@ -6,13 +6,20 @@ import threading
 from playsound import playsound
 import time
 
-class Main():
+
+class Main:
 
     def __init__(self) -> None:
         self.valid_stream = False
         vad = google_vad.GOOGLE_WEBRTC()
-        vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad, ))
-        stt_thread = threading.Thread(target=google_stt.main, args=(self.callback_interim, self.callback_final,))
+        vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad,))
+        stt_thread = threading.Thread(
+            target=google_stt.main,
+            args=(
+                self.callback_interim,
+                self.callback_final,
+            ),
+        )
         self.llm = chatgpt_assistants_stream.ChatGPT(valid_stream=self.valid_stream)
 
         self.response_buffer = []
@@ -41,15 +48,23 @@ class Main():
         self.latest_user_utterance = user_utterance
 
     def callback_vad(self, flag):
-        if flag == True: # 発話のはじめ
+        if flag == True:  # 発話のはじめ
             if self.latest_user_utterance != None:
-                print("callback_vad flag is true, latest_user_utterance=" + self.latest_user_utterance)
+                print(
+                    "callback_vad flag is true, latest_user_utterance="
+                    + self.latest_user_utterance
+                )
 
-        elif self.latest_user_utterance != None: # 発話の終わり
+        elif self.latest_user_utterance != None:  # 発話の終わり
             if self.latest_user_utterance != None:
-                print("callback_vad flag is false, latest_user_utterance=" + self.latest_user_utterance)
+                print(
+                    "callback_vad flag is false, latest_user_utterance="
+                    + self.latest_user_utterance
+                )
             self.time_user_speeching_end = time.time()
-            threading.Thread(target=self.main_process, args=(self.latest_user_utterance,)).start()
+            threading.Thread(
+                target=self.main_process, args=(self.latest_user_utterance,)
+            ).start()
 
     def main_process(self, agent_utterance):
         wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
@@ -60,20 +75,18 @@ class Main():
             )
         )
 
-
     def audio_play(self, agent_utterance):
         wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
 
         start_time = time.time()
-        with open("tmp.wav", mode='bw') as f:
+        with open("tmp.wav", mode="bw") as f:
             f.write(wav_data)
         if self.time_user_speeching_end != None:
             print("応答までの時間", time.time() - self.time_user_speeching_end)
         self.time_user_speeching_end = None
-        playsound("tmp.wav") # ./doc/playsound_issue.md
+        playsound("tmp.wav")  # ./doc/playsound_issue.md
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     ins = Main()
     ins.wait()

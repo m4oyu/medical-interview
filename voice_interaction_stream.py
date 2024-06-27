@@ -6,13 +6,20 @@ import threading
 from playsound import playsound
 import time
 
-class Main():
+
+class Main:
 
     def __init__(self) -> None:
         self.valid_stream = True
         vad = google_vad.GOOGLE_WEBRTC()
-        vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad, ))
-        stt_thread = threading.Thread(target=google_stt.main, args=(self.callback_interim, self.callback_final,))
+        vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad,))
+        stt_thread = threading.Thread(
+            target=google_stt.main,
+            args=(
+                self.callback_interim,
+                self.callback_final,
+            ),
+        )
         self.llm = chatgpt.ChatGPT(valid_stream=self.valid_stream)
 
         self.latest_user_utterance = None
@@ -44,7 +51,9 @@ class Main():
             self.latest_user_utterance = None
         elif self.latest_user_utterance != None:
             self.time_user_speeching_end = time.time()
-            threading.Thread(target=self.main_process, args=(self.latest_user_utterance,)).start()
+            threading.Thread(
+                target=self.main_process, args=(self.latest_user_utterance,)
+            ).start()
 
     def main_process(self, user_utterance):
         llm_result = self.llm.get(user_utterance)
@@ -59,7 +68,7 @@ class Main():
                 if word == None:
                     break
                 u += word
-                for split_word in ["、","。", "？", "！"]:
+                for split_word in ["、", "。", "？", "！"]:
                     if split_word in u:
                         print(u)
                         wav_data, wav_length = voicevox.get_audio_file_from_text(u)
@@ -71,7 +80,7 @@ class Main():
 
     def audio_play(self, wav_data, wav_length):
         start_time = time.time()
-        with open("tmp.wav", mode='bw') as f:
+        with open("tmp.wav", mode="bw") as f:
             f.write(wav_data)
         if self.time_user_speeching_end != None:
             print("応答までの時間", time.time() - self.time_user_speeching_end)
@@ -82,6 +91,6 @@ class Main():
             pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ins = Main()
     ins.wait()

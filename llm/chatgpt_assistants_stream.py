@@ -9,10 +9,13 @@ from openai.types.beta import AssistantStreamEvent
 from openai.types.beta.threads import Text, TextDelta
 from openai.types.beta.threads.runs import RunStep, RunStepDelta
 
-class ChatGPT():
 
-    class EventHandler(AssistantEventHandler):    
-        def __init__(self, response_buffer: List[str], process_partial_response: callable) -> None:
+class ChatGPT:
+
+    class EventHandler(AssistantEventHandler):
+        def __init__(
+            self, response_buffer: List[str], process_partial_response: callable
+        ) -> None:
             super().__init__()
             self.response_buffer = response_buffer
             self.process_partial_response = process_partial_response
@@ -60,16 +63,15 @@ class ChatGPT():
         #         for tool in details.tool_calls or []:
         #             if tool.type == "code_interpreter" and tool.code_interpreter and tool.code_interpreter.input:
         #                 print(tool.code_interpreter.input, end="", flush=True)
-    
+
     def __init__(self, valid_stream) -> None:
         self.client = openai.OpenAI(
-            api_key=os.getenv('OPENAI_API_KEY'),
+            api_key=os.getenv("OPENAI_API_KEY"),
         )
         self.dialogue_history = ""
-        self.valid_stream = valid_stream # 漸次的に応答を返す機能を有効にするか
+        self.valid_stream = valid_stream  # 漸次的に応答を返す機能を有効にするか
         self.thread = self.client.beta.threads.create()
         self.assistant_id = "asst_z2nd92qpkV3ktiTDMMwwZEnG"
-
 
     def stream_responses(self, event_handler: AssistantEventHandler):
         with self.client.beta.threads.runs.stream(

@@ -13,6 +13,7 @@ from six.moves import queue
 RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
+
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
 
@@ -80,6 +81,7 @@ class MicrophoneStream(object):
 
             yield b"".join(data)
 
+
 def listen_print_loop(responses):
     """Iterates through server responses and prints them.
 
@@ -117,7 +119,6 @@ def listen_print_loop(responses):
         # some extra spaces to overwrite the previous result
         overwrite_chars = " " * (num_chars_printed - len(transcript))
 
-
         if not result.is_final:
             sys.stdout.write(transcript + "\r")
             sys.stdout.flush()
@@ -135,8 +136,11 @@ def listen_print_loop(responses):
 
             num_chars_printed = 0
 
+
 def main():
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./credentials/medical-interview-420407-ce680056c929.json"
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+        "./credentials/medical-interview-420407-ce680056c929.json"
+    )
 
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
@@ -145,13 +149,15 @@ def main():
     config = speech.RecognitionConfig(
         encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,
-        language_code='ja-JP',
+        language_code="ja-JP",
         max_alternatives=1,
     )
 
     streaming_config = speech.StreamingRecognitionConfig(
         # config=config, interim_results=True,
-        config=config, single_utterance=True, interim_results=True,
+        config=config,
+        single_utterance=True,
+        interim_results=True,
     )
 
     with MicrophoneStream(RATE, CHUNK) as stream:
@@ -166,8 +172,8 @@ def main():
         # Now, put the transcription responses to use.
         listen_print_loop(responses)
 
-    
     print("session end")
+
 
 if __name__ == "__main__":
     main()

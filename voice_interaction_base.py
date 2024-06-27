@@ -1,4 +1,5 @@
 from stt import google_stt
+
 # from vad import google_vad
 from llm import chatgpt
 from tts import voicevox
@@ -6,10 +7,17 @@ import threading
 from playsound import playsound
 import time
 
-class Main():
+
+class Main:
 
     def __init__(self) -> None:
-        stt_thread = threading.Thread(target=google_stt.main, args=(self.callback_interim, self.callback_final,))
+        stt_thread = threading.Thread(
+            target=google_stt.main,
+            args=(
+                self.callback_interim,
+                self.callback_final,
+            ),
+        )
         self.llm = chatgpt.ChatGPT(valid_stream=False)
 
         self.latest_user_utterance = None
@@ -34,7 +42,9 @@ class Main():
 
     def callback_final(self, user_utterance):
         self.latest_user_utterance = user_utterance
-        threading.Thread(target=self.main_process, args=(self.latest_user_utterance,)).start()
+        threading.Thread(
+            target=self.main_process, args=(self.latest_user_utterance,)
+        ).start()
 
     # def callback_vad(self, flag):
     #     if flag == False:
@@ -43,11 +53,13 @@ class Main():
 
     def main_process(self, user_utterance):
         llm_result = self.llm.get(user_utterance)
-        wav_data, _ = voicevox.get_audio_file_from_text(llm_result.choices[0].message.content)
+        wav_data, _ = voicevox.get_audio_file_from_text(
+            llm_result.choices[0].message.content
+        )
         self.audio_play(wav_data)
 
     def audio_play(self, wav_data):
-        with open("tmp.wav", mode='bw') as f:
+        with open("tmp.wav", mode="bw") as f:
             f.write(wav_data)
         # if self.time_user_speeching_end != None:
         #     print("応答までの時間", time.time() - self.time_user_speeching_end)
@@ -55,9 +67,6 @@ class Main():
         playsound("tmp.wav")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ins = Main()
     ins.wait()
-
-
-

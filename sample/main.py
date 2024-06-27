@@ -19,7 +19,7 @@ CHUNK = int(RATE / 10)  # 100ms
 # gets API Key from environment variable OPENAI_API_KEY
 openai_client = openai.OpenAI(
     # This is the default and can be omitted
-    api_key=os.getenv('OPENAI_API_KEY'),
+    api_key=os.getenv("OPENAI_API_KEY"),
 )
 
 
@@ -172,8 +172,11 @@ def listen_print_loop(responses, assistant, thread):
 
             num_chars_printed = 0
 
+
 def main():
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./credentials/medical-interview-420407-ce680056c929.json"
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+        "./credentials/medical-interview-420407-ce680056c929.json"
+    )
 
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
@@ -182,7 +185,7 @@ def main():
     config = speech.RecognitionConfig(
         encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,
-        language_code='ja-JP',
+        language_code="ja-JP",
     )
 
     streaming_config = speech.StreamingRecognitionConfig(
@@ -191,9 +194,9 @@ def main():
 
     assistant = openai_client.beta.assistants.create(
         name="体調不良を訴える患者",
-        instructions='''このGPTは、病院へ診療しに来た患者・山本ゆうきとして振る舞う。
+        instructions="""このGPTは、病院へ診療しに来た患者・山本ゆうきとして振る舞う。
         短く、要点を押さえた対話を心がけ、一言か二言での返答を提供する。患者の立場からの質問や心配を簡潔に表現し、医療従事者のトレーニングや練習に役立てる。
-        リアルな患者の振る舞いを模倣し、様々な症状や背景ストーリーを持つ患者の役割を果たすが、過度な医療知識の提供や実際の診断、治療に関するアドバイスや質問は避ける。''',
+        リアルな患者の振る舞いを模倣し、様々な症状や背景ストーリーを持つ患者の役割を果たすが、過度な医療知識の提供や実際の診断、治療に関するアドバイスや質問は避ける。""",
         tools=[{"type": "code_interpreter"}],
         model="gpt-3.5-turbo",
     )

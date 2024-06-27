@@ -215,7 +215,9 @@ class ResumableMicrophoneStream:
             yield b"".join(data)
 
 
-def listen_print_loop(responses: object, stream: object, callback_interim: object, callback_final: object) -> object:
+def listen_print_loop(
+    responses: object, stream: object, callback_interim: object, callback_final: object
+) -> object:
     """Iterates through server responses and prints them.
 
     The responses passed is a generator that will block until a response
@@ -303,7 +305,9 @@ def listen_print_loop(responses: object, stream: object, callback_interim: objec
 
 
 def main(callback_interim, callback_final) -> None:
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "./.credentials/medical-interview-420407-ce680056c929.json"
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+        "./.credentials/medical-interview-420407-ce680056c929.json"
+    )
 
     """start bidirectional streaming from microphone input to speech API"""
     client = speech.SpeechClient()

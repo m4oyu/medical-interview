@@ -214,7 +214,9 @@ class ResumableMicrophoneStream:
             yield b"".join(data)
 
 
-def listen_print_loop(responses: object, stream: object, callback_interim: object, callback_final: object) -> object:
+def listen_print_loop(
+    responses: object, stream: object, callback_interim: object, callback_final: object
+) -> object:
     """Iterates through server responses and prints them.
 
     The responses passed is a generator that will block until a response
