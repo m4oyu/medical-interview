@@ -5,15 +5,16 @@ from tts import voicevox
 import threading
 from playsound import playsound
 import time
+import argparse
 
 class Main():
 
-    def __init__(self) -> None:
+    def __init__(self, assistant_id) -> None:
         self.valid_stream = False
         vad = google_vad.GOOGLE_WEBRTC()
-        vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad, ))
+        vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad,))
         stt_thread = threading.Thread(target=google_stt.main, args=(self.callback_interim, self.callback_final,))
-        self.llm = chatgpt_assistants.ChatGPT(valid_stream=self.valid_stream)
+        self.llm = chatgpt_assistants.ChatGPT(assistant_id=assistant_id, valid_stream=self.valid_stream)
 
         self.latest_user_utterance = None
         self.dialogue_history = ""
@@ -79,5 +80,18 @@ class Main():
 
 
 if __name__ == '__main__':
-    ins = Main()
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('assistant', type=str, choices=['okada', 'sakamoto', 'tanaka'],
+                        help='対話相手となるアシスタントの名前を指定します。利用可能なアシスタントは、okada、sakamoto、tanaka です。')
+    args = parser.parse_args()
+    assistant_ids = {
+        'okada': 'asst_naZAtdVwSUKvWQdEqwsTxVTn',
+        'sakamoto': 'asst_8c8S3HjgZnRlBocIGYKtgQPn',
+        'tanaka': 'asst_pZJeMVb6yEC6232AGzhMa5Bm'
+    }
+    selected_assistant_id = assistant_ids[args.assistant]
+    print("Selected assistant:", args.assistant)
+
+    ins = Main(selected_assistant_id)
     ins.wait()
