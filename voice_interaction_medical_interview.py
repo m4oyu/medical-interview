@@ -27,13 +27,13 @@ class Main:
 
         self.latest_user_utterance = None
         self.dialogue_history = ""
-        self.finished_user_speeching = False
 
         # 計測用
         self.time_user_speeching_end = None
 
         # 排他制御用のロック
-        self.lock = threading.Lock()
+        self.dialogue_history_lock = threading.Lock()
+        self.main_process_lock = threading.Lock()
 
         stt_thread.start()
         vad_thread.start()
@@ -45,12 +45,17 @@ class Main:
             thread.join()
 
     def callback_interim(self, user_utterance):
-        print("callback_interim: " + user_utterance)
-        self.latest_user_utterance = user_utterance
+        with self.dialogue_history_lock:
+            print("callback_interim: " + user_utterance)
+            print("dialogue_history: " + self.dialogue_history)
+            self.latest_user_utterance = user_utterance
 
     def callback_final(self, user_utterance):
-        print("callback_final: " + user_utterance)
-        self.dialogue_history = ""
+        with self.dialogue_history_lock:
+            print("callback_final: " + user_utterance)
+            print("dialogue_history: " + self.dialogue_history)
+            self.dialogue_history = self.dialogue_history[len(user_utterance) :]
+            # self.dialogue_history = ""
 
     def callback_vad(self, flag):
         if flag == True:  # 発話のはじめ
@@ -65,19 +70,21 @@ class Main:
                     "callback_vad flag is false, latest_user_utterance="
                     + self.latest_user_utterance
                 )
+
             self.time_user_speeching_end = time.time()
-            user_utt = self.latest_user_utterance[len(self.dialogue_history) :]
+
+            with self.dialogue_history_lock:
+                user_utt = self.latest_user_utterance[len(self.dialogue_history) :]
+                self.dialogue_history = self.latest_user_utterance
 
             print("user_utt: " + user_utt)
             if len(user_utt) <= 0:
                 return
 
             threading.Thread(target=self.main_process, args=(user_utt,)).start()
-            self.dialogue_history = self.latest_user_utterance
 
     def main_process(self, user_utterance):
-        with self.lock:
-            self.latest_user_utterance_len = len(self.latest_user_utterance)
+        with self.main_process_lock:
             agent_utterance = self.llm.get(user_utterance)
             if self.valid_stream == False:
                 wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
