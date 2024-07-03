@@ -6,15 +6,20 @@ import threading
 from playsound import playsound
 import time
 import argparse
+import sys
 
 
 class Main:
 
     def __init__(self, assistant_id) -> None:
         self.valid_stream = False
-        vad = google_vad.GOOGLE_WEBRTC()
-        vad_thread = threading.Thread(target=vad.vad_loop, args=(self.callback_vad,))
-        stt_thread = threading.Thread(
+        self.vad = google_vad.GOOGLE_WEBRTC()
+        self.stop_threads = threading.Event()
+
+        self.vad_thread = threading.Thread(
+            target=self.vad.vad_loop, args=(self.callback_vad,)
+        )
+        self.stt_thread = threading.Thread(
             target=google_stt.main,
             args=(
                 self.callback_interim,
@@ -35,8 +40,10 @@ class Main:
         self.dialogue_history_lock = threading.Lock()
         self.main_process_lock = threading.Lock()
 
-        stt_thread.start()
-        vad_thread.start()
+        self.stt_thread.start()
+        self.vad_thread.start()
+
+        self.file = open("./log/test.txt", "a", encoding="utf-8")
 
     def wait(self):
         thread_list = threading.enumerate()
@@ -80,12 +87,24 @@ class Main:
             print("user_utt: " + user_utt)
             if len(user_utt) <= 0:
                 return
+            self.file.write(user_utt + "\n")
 
             threading.Thread(target=self.main_process, args=(user_utt,)).start()
 
     def main_process(self, user_utterance):
+        if user_utterance.strip() == "終了":
+            print("プログラムを終了します。")
+            self.file.write("\n")
+            self.file.close()
+            self.stop_threads.set()
+            # self.vad.stop()  # VADループを停止
+            self.stt_thread.join()  # STTスレッドを待機
+            self.vad_thread.join()  # VADスレッドを待機
+            sys.exit()
+
         with self.main_process_lock:
             agent_utterance = self.llm.get(user_utterance)
+            self.file.write(agent_utterance + "\n")
             if self.valid_stream == False:
                 wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
                 self.audio_play(wav_data)
