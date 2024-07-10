@@ -91,10 +91,10 @@ class Main:
                 self.dialogue_history = self.latest_user_utterance
 
             print("user_utt: " + user_utt)
+            self.utterance_count += 1
             if len(user_utt) <= 0:
                 return
             self.file.write(user_utt + "\n")
-            self.utterance_count += 1
 
             threading.Thread(target=self.main_process, args=(user_utt,)).start()
 
@@ -113,7 +113,7 @@ class Main:
             agent_utterance = self.llm.get(user_utterance)
             self.file.write(agent_utterance + "\n")
             if self.valid_stream == False:
-                self.turntake_count += 1
+                self.turn_taking_count += 1
                 wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
                 self.audio_play(wav_data)
 
