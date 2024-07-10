@@ -286,7 +286,7 @@ def listen_print_loop(
 
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
-            if re.search(r"\b(exit|quit)\b", transcript, re.I):
+            if re.search(r"\b(終了|quit)\b", transcript, re.I):
                 sys.stdout.write(YELLOW)
                 sys.stdout.write("Exiting...\n")
                 stream.closed = True
@@ -300,6 +300,12 @@ def listen_print_loop(
                 callback_interim(transcript)
 
             stream.last_transcript_was_final = False
+
+        # if re.search(r"\b(終了|quit)\b", transcript, re.I):
+        #     sys.stdout.write(YELLOW)
+        #     sys.stdout.write("Exiting...\n")
+        #     stream.closed = True
+        #     break
 
     return transcript
 

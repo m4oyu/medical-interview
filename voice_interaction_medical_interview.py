@@ -20,7 +20,8 @@ class Main:
         self.stop_threads = threading.Event()
 
         self.vad_thread = threading.Thread(
-            target=self.vad.vad_loop, args=(self.callback_vad,)
+            target=self.vad.vad_loop,
+            args=(self.callback_vad,),
         )
         self.stt_thread = threading.Thread(
             target=google_stt.main,
@@ -38,7 +39,8 @@ class Main:
 
         # 計測用
         self.time_user_speeching_end = None
-        self.turntake_count = 0
+        self.turn_taking_count = 0
+        self.utterance_count = 0
 
         # 排他制御用のロック
         self.dialogue_history_lock = threading.Lock()
@@ -92,26 +94,26 @@ class Main:
             if len(user_utt) <= 0:
                 return
             self.file.write(user_utt + "\n")
+            self.utterance_count += 1
 
             threading.Thread(target=self.main_process, args=(user_utt,)).start()
 
     def main_process(self, user_utterance):
         if user_utterance.strip() == "終了":
             print("プログラムを終了します。")
-            self.file.write("会話ターン数: " + str(self.turntake_count) + "\n")
+
+            self.file.write("会話ターン数: " + str(self.turn_taking_count) + "\n")
+            self.file.write("発話数: " + str(self.utterance_count) + "\n")
             self.file.write("\n")
             self.file.close()
-            self.stop_threads.set()
-            # self.vad.stop()  # VADループを停止
-            self.stt_thread.join()  # STTスレッドを待機
-            self.vad_thread.join()  # VADスレッドを待機
-            sys.exit()
+
+            sys.exit(0)
 
         with self.main_process_lock:
             agent_utterance = self.llm.get(user_utterance)
             self.file.write(agent_utterance + "\n")
-            self.turntake_count += 1
             if self.valid_stream == False:
+                self.turntake_count += 1
                 wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
                 self.audio_play(wav_data)
 
