@@ -7,6 +7,9 @@ from playsound import playsound
 import time
 import argparse
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()  # take environment variables from .env.
 
 
 class Main:
@@ -35,6 +38,7 @@ class Main:
 
         # 計測用
         self.time_user_speeching_end = None
+        self.turntake_count = 0
 
         # 排他制御用のロック
         self.dialogue_history_lock = threading.Lock()
@@ -94,6 +98,7 @@ class Main:
     def main_process(self, user_utterance):
         if user_utterance.strip() == "終了":
             print("プログラムを終了します。")
+            self.file.write("会話ターン数: " + str(self.turntake_count) + "\n")
             self.file.write("\n")
             self.file.close()
             self.stop_threads.set()
@@ -105,6 +110,7 @@ class Main:
         with self.main_process_lock:
             agent_utterance = self.llm.get(user_utterance)
             self.file.write(agent_utterance + "\n")
+            self.turntake_count += 1
             if self.valid_stream == False:
                 wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
                 self.audio_play(wav_data)
