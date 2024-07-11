@@ -43,6 +43,7 @@ CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
 RED = "\033[0;31m"
 GREEN = "\033[0;32m"
 YELLOW = "\033[0;33m"
+WHITE = "\033[0m"
 
 
 def get_current_time() -> int:
@@ -240,6 +241,9 @@ def listen_print_loop(
         The transcript of the result
     """
     for response in responses:
+        if stream.closed:
+            return
+
         if get_current_time() - stream.start_time > STREAMING_LIMIT:
             stream.start_time = get_current_time()
             break
@@ -284,28 +288,21 @@ def listen_print_loop(
             stream.is_final_end_time = stream.result_end_time
             stream.last_transcript_was_final = True
 
-            # Exit recognition if any of the transcribed phrases could be
-            # one of our keywords.
-            if re.search(r"\b(終了|quit)\b", transcript, re.I):
-                sys.stdout.write(YELLOW)
-                sys.stdout.write("Exiting...\n")
-                stream.closed = True
-                break
         else:
             sys.stdout.write(RED)
             sys.stdout.write("\033[K")
-            sys.stdout.write(str(corrected_time) + ": " + transcript + "\r")
+            sys.stdout.write(str(corrected_time) + ": " + transcript + "\n")
 
             if callback_interim != None:
                 callback_interim(transcript)
 
             stream.last_transcript_was_final = False
 
-        # if re.search(r"\b(終了|quit)\b", transcript, re.I):
-        #     sys.stdout.write(YELLOW)
-        #     sys.stdout.write("Exiting...\n")
-        #     stream.closed = True
-        #     break
+        if re.search(r"\b(終了)\b", transcript, re.I):
+            sys.stdout.write(WHITE)
+            sys.stdout.write("Exiting...\n")
+            stream.closed = True
+            break
 
     return transcript
 
@@ -331,7 +328,7 @@ def main(callback_interim, callback_final) -> None:
     mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
     print(mic_manager.chunk_size)
     sys.stdout.write(YELLOW)
-    sys.stdout.write('\nListening, say "Quit" or "Exit" to stop.\n\n')
+    sys.stdout.write('\nListening, say "終了" to stop.\n\n')
     sys.stdout.write("End (ms)       Transcript Results/Status\n")
     sys.stdout.write("=====================================================\n")
 

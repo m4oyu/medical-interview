@@ -23,9 +23,5 @@ class ChatGPT:
         )
         if run.status == "completed":
             messages = self.client.beta.threads.messages.list(thread_id=self.thread.id)
-            print("messages: " + messages.data[0].content[0].text.value)
-        else:
-            print("run.status: ")
-            print(run.status)
 
         return messages.data[0].content[0].text.value

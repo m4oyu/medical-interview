@@ -8,6 +8,8 @@ import time
 import argparse
 import sys
 from dotenv import load_dotenv
+import recording
+from logger import logger
 
 load_dotenv()  # take environment variables from .env.
 
@@ -16,9 +18,8 @@ class Main:
 
     def __init__(self, assistant_id) -> None:
         self.valid_stream = False
-        self.vad = google_vad.GOOGLE_WEBRTC()
-        self.stop_threads = threading.Event()
 
+        self.vad = google_vad.GOOGLE_WEBRTC()
         self.vad_thread = threading.Thread(
             target=self.vad.vad_loop,
             args=(self.callback_vad,),
@@ -34,13 +35,13 @@ class Main:
             assistant_id=assistant_id, valid_stream=self.valid_stream
         )
 
+        # 対話履歴の差分で発話を認識する
         self.latest_user_utterance = None
         self.dialogue_history = ""
 
         # 計測用
         self.time_user_speeching_end = None
         self.turn_taking_count = 0
-        self.utterance_count = 0
 
         # 排他制御用のロック
         self.dialogue_history_lock = threading.Lock()
@@ -48,8 +49,6 @@ class Main:
 
         self.stt_thread.start()
         self.vad_thread.start()
-
-        self.file = open("./log/test.txt", "a", encoding="utf-8")
 
     def wait(self):
         thread_list = threading.enumerate()
@@ -59,27 +58,26 @@ class Main:
 
     def callback_interim(self, user_utterance):
         with self.dialogue_history_lock:
-            print("callback_interim: " + user_utterance)
-            print("dialogue_history: " + self.dialogue_history)
+            logger.debug("callback_interim: " + user_utterance)
+            logger.debug("dialogue_history: " + self.dialogue_history)
             self.latest_user_utterance = user_utterance
 
     def callback_final(self, user_utterance):
         with self.dialogue_history_lock:
-            print("callback_final: " + user_utterance)
-            print("dialogue_history: " + self.dialogue_history)
+            logger.debug("callback_final: " + user_utterance)
+            logger.debug("dialogue_history: " + self.dialogue_history)
             self.dialogue_history = self.dialogue_history[len(user_utterance) :]
-            # self.dialogue_history = ""
 
     def callback_vad(self, flag):
         if flag == True:  # 発話のはじめ
             if self.latest_user_utterance != None:
-                print(
+                logger.debug(
                     "callback_vad flag is true, latest_user_utterance="
                     + self.latest_user_utterance
                 )
         elif self.latest_user_utterance != None:  # 発話の終わり
             if self.latest_user_utterance != None:
-                print(
+                logger.debug(
                     "callback_vad flag is false, latest_user_utterance="
                     + self.latest_user_utterance
                 )
@@ -90,28 +88,27 @@ class Main:
                 user_utt = self.latest_user_utterance[len(self.dialogue_history) :]
                 self.dialogue_history = self.latest_user_utterance
 
-            print("user_utt: " + user_utt)
-            self.utterance_count += 1
+            if user_utt.strip() == "終了":
+                print("プログラムを終了します。")
+                logger.info("会話ターン数: " + str(self.turn_taking_count) + "\n")
+                self.vad.shutdown()
+                recording.stop()
+                sys.exit(0)
+
             if len(user_utt) <= 0:
                 return
-            self.file.write(user_utt + "\n")
 
-            threading.Thread(target=self.main_process, args=(user_utt,)).start()
+            logger.info("User:   " + user_utt)
+
+            threading.Thread(
+                target=self.main_process,
+                args=(user_utt,),
+            ).start()
 
     def main_process(self, user_utterance):
-        if user_utterance.strip() == "終了":
-            print("プログラムを終了します。")
-
-            self.file.write("会話ターン数: " + str(self.turn_taking_count) + "\n")
-            self.file.write("発話数: " + str(self.utterance_count) + "\n")
-            self.file.write("\n")
-            self.file.close()
-
-            sys.exit(0)
-
         with self.main_process_lock:
             agent_utterance = self.llm.get(user_utterance)
-            self.file.write(agent_utterance + "\n")
+            logger.info("System: " + agent_utterance)
             if self.valid_stream == False:
                 self.turn_taking_count += 1
                 wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
@@ -128,6 +125,7 @@ class Main:
 
 
 if __name__ == "__main__":
+    recording.start()
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
