@@ -6,7 +6,7 @@ asap = "http://192.168.1.161:50021"
 local = "http://localhost:50021"
 
 
-def get_audio_query(text, speaker=41):
+def get_audio_query(text, speaker):
     query_payload = {"text": text, "speaker": speaker}
     while True:
         try:
@@ -20,7 +20,7 @@ def get_audio_query(text, speaker=41):
             time.sleep(0.1)
 
 
-def run_synthesis(query_data, speaker=41):
+def run_synthesis(query_data, speaker):
     synth_payload = {"speaker": speaker}
     while True:
         try:
@@ -49,6 +49,6 @@ def extract_wav_length(query_data):
     return length
 
 
-def get_audio_file_from_text(text):
-    query_data = get_audio_query(text)
-    return run_synthesis(query_data), extract_wav_length(query_data)
+def get_audio_file_from_text(text, voicevox_id):
+    query_data = get_audio_query(text, voicevox_id)
+    return run_synthesis(query_data, voicevox_id), extract_wav_length(query_data)

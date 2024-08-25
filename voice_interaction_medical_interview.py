@@ -16,7 +16,7 @@ load_dotenv()  # take environment variables from .env.
 
 class Main:
 
-    def __init__(self, assistant_id) -> None:
+    def __init__(self, chatgpt_id, voicevox_id) -> None:
         self.valid_stream = False
 
         self.vad = google_vad.GOOGLE_WEBRTC()
@@ -32,7 +32,7 @@ class Main:
             ),
         )
         self.llm = chatgpt_assistants.ChatGPT(
-            assistant_id=assistant_id, valid_stream=self.valid_stream
+            assistant_id=chatgpt_id, valid_stream=self.valid_stream
         )
 
         # 対話履歴の差分で発話を認識する
@@ -111,7 +111,9 @@ class Main:
             logger.info("System: " + agent_utterance)
             if self.valid_stream == False:
                 self.turn_taking_count += 1
-                wav_data, _ = voicevox.get_audio_file_from_text(agent_utterance)
+                wav_data, _ = voicevox.get_audio_file_from_text(
+                    agent_utterance, voicevox_id
+                )
                 self.audio_play(wav_data)
 
     def audio_play(self, wav_data):
@@ -127,23 +129,27 @@ class Main:
 if __name__ == "__main__":
     recording.start()
 
+    assistant_ids = {
+        # assistant_name, chatgpt_id, voicevox_id
+        "asada": ("asst_H4oGlrfP5DXLNiKgJFyNxmxu", 2),
+        "suzuki": ("asst_KUzHQsqsQZKGkcgz2utfAhH0", 2),
+        "okada": ("asst_naZAtdVwSUKvWQdEqwsTxVTn", 41),
+        "sakamoto": ("asst_8c8S3HjgZnRlBocIGYKtgQPn", 41),
+        "tanaka": ("asst_pZJeMVb6yEC6232AGzhMa5Bm", 41),
+    }
+    assistant_names = list(assistant_ids.keys())
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "assistant",
         type=str,
-        choices=["okada", "sakamoto", "tanaka", "suzuki", "asada"],
-        help="対話相手の名前を指定します。利用可能な対話相手は、asada, suzuki, okada, sakamoto, tanaka です。",
+        choices=assistant_names,
+        help=f"対話相手の名前を指定します。利用可能な対話相手は、{', '.join(assistant_names)} です。",
     )
     args = parser.parse_args()
-    assistant_ids = {
-        "asada": "asst_H4oGlrfP5DXLNiKgJFyNxmxu",
-        "suzuki": "asst_KUzHQsqsQZKGkcgz2utfAhH0",
-        "okada": "asst_naZAtdVwSUKvWQdEqwsTxVTn",
-        "sakamoto": "asst_8c8S3HjgZnRlBocIGYKtgQPn",
-        "tanaka": "asst_pZJeMVb6yEC6232AGzhMa5Bm",
-    }
-    selected_assistant_id = assistant_ids[args.assistant]
-    print("Selected assistant:", args.assistant)
 
-    ins = Main(selected_assistant_id)
+    print("Selected assistant:", args.assistant)
+    chatgpt_id, voicevox_id = assistant_ids[args.assistant]
+
+    ins = Main(chatgpt_id, voicevox_id)
     ins.wait()
