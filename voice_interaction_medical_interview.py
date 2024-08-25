@@ -131,11 +131,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "assistant",
         type=str,
-        choices=["okada", "sakamoto", "tanaka"],
-        help="対話相手となるアシスタントの名前を指定します。利用可能なアシスタントは、okada、sakamoto、tanaka です。",
+        choices=["okada", "sakamoto", "tanaka", "suzuki", "asada"],
+        help="対話相手の名前を指定します。利用可能な対話相手は、asada, suzuki, okada, sakamoto, tanaka です。",
     )
     args = parser.parse_args()
     assistant_ids = {
+        "asada": "asst_H4oGlrfP5DXLNiKgJFyNxmxu",
+        "suzuki": "asst_KUzHQsqsQZKGkcgz2utfAhH0",
         "okada": "asst_naZAtdVwSUKvWQdEqwsTxVTn",
         "sakamoto": "asst_8c8S3HjgZnRlBocIGYKtgQPn",
         "tanaka": "asst_pZJeMVb6yEC6232AGzhMa5Bm",
